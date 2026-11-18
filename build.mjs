@@ -140,7 +140,7 @@ const heroBody = `
 </section>
 <section class="hx-next"><div class="hx-wrap"><h2>Подберём модель под ваши задачи</h2><p>Рассчитаем стоимость с доставкой до вашего города и сроки поставки.</p><a class="hx-cta" href="#">Подобрать технику</a></div></section>
 </main>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="hx-keyout" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -3.6 -3.6 -3.6 0 10.35"/></filter></svg>
+
 </div>`;
 const SCROLLER = `
 const hero = document.querySelector(".hx-hero");

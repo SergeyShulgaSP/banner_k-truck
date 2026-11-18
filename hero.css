@@ -49,7 +49,7 @@
 .hx-steps li.on::before{background:#ff5a1f}
 .hx-cue{margin:18px 0 0;font-size:13px;color:#8d9095;display:flex;align-items:center;gap:8px}
 .hx-stage{position:relative;height:min(78vh,760px);min-width:0}
-.hx-photo{position:absolute;left:22%;top:8%;width:56%;height:auto;aspect-ratio:1/1;object-fit:contain;filter:url(#hx-keyout) brightness(.98);opacity:var(--photo,1);transform:scale(calc(1.06 - .06 * var(--photo,1)));transition:none;pointer-events:none}
+.hx-photo{position:absolute;left:22%;top:8%;width:56%;height:auto;aspect-ratio:1/1;object-fit:contain;opacity:var(--photo,1);transform:scale(calc(1.06 - .06 * var(--photo,1)));transition:none;pointer-events:none}
 .hx-draw{position:absolute;inset:0;display:flex;align-items:center;opacity:var(--draw,0)}
 .hx-draw .kt-stage{width:122%;margin-left:-14%}
 .hx-readout{position:absolute;right:0;bottom:0;margin:0;font:600 13px "Montserrat",Arial,sans-serif;color:#e6e7e9;text-align:right;max-width:70%;opacity:var(--draw,0)}
