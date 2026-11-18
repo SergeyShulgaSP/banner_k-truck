@@ -1,5 +1,6 @@
 const D = __DATA__;
-const root = document.querySelector(".kt-banner");
+const root = document.querySelector("[data-rumm]");
+const SCROLL = root.hasAttribute("data-scroll");
 const stage = root.querySelector(".kt-stage");
 const machine = stage.querySelector(".kt-machine");
 const readout = root.querySelector("[data-readout]");
@@ -47,7 +48,7 @@ const piece = Object.fromEntries(D.stagger.map((id) => [id, springOf()]));
 const spread = springOf();
 
 let clock = 0, apart = false, spreadOn = false, selected = null;
-let touring = !still.matches, tourClock = 0, idleTimer = 0, leaveTimer = 0;
+let touring = !still.matches && !SCROLL, tourClock = 0, idleTimer = 0, leaveTimer = 0;
 let visible = false, frame = 0, last = 0;
 
 const screen = (v, share) => [(D.EX[0] * v[0] + D.EY[0] * v[1] + D.EZ[0] * v[2]) * share, (D.EX[1] * v[0] + D.EY[1] * v[1] + D.EZ[1] * v[2]) * share];
@@ -75,15 +76,14 @@ function setApart(on) {
     if (p.target === goal) p.pending = null;
     else p.pending = { value: goal, at: clock + (still.matches ? 0 : index++ * SPRING.stagger) };
   }
-  apartButton.textContent = on ? "Собрать" : "Разобрать";
+  if (apartButton) apartButton.textContent = on ? "Собрать" : "Разобрать";
   if (!on) select(null);
   run();
 }
 function setSpread(on) {
   spreadOn = on;
   spread.target = on ? 1 : 0;
-  spreadButton.setAttribute("aria-pressed", String(on));
-  spreadButton.textContent = on ? "Сдвинуть шасси" : "Раздвинуть шасси";
+  if (spreadButton) { spreadButton.setAttribute("aria-pressed", String(on)); spreadButton.textContent = on ? "Сдвинуть шасси" : "Раздвинуть шасси"; }
   run();
 }
 function setSwing(value) {
@@ -158,6 +158,17 @@ function tourTick(dt) {
   while (tourIndex < TOUR.length && tourClock >= TOUR[tourIndex][0]) TOUR[tourIndex++][1]();
 }
 
+// ---- scroll mode: the page sets a progress 0..1 and every share follows it directly ----
+let progress = 0;
+const smooth = (t) => { const x = Math.min(1, Math.max(0, t)); return x * x * (3 - 2 * x); };
+function applyProgress() {
+  spread.x = spread.target = smooth((progress - 0.18) / 0.14);
+  spreadOn = spread.x > 0.5;
+  D.stagger.forEach((id, i) => { const p = piece[id]; p.x = p.target = smooth((progress - 0.36 - i * 0.018) / 0.24); p.v = 0; p.pending = null; });
+  apart = piece[D.stagger[0]].x > 0.5;
+  if (selected && piece[D.stagger[D.stagger.length - 1]].x < 0.9) select(null);
+}
+window.RUMM = { progress(p) { progress = p; if (SCROLL) { applyProgress(); place(); say(status()); } }, swing: (v) => setSwing(v) };
 function tick(now) {
   const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
   last = now;
@@ -165,8 +176,10 @@ function tick(now) {
   const calm = still.matches;
   if (touring) tourTick(dt);
   let moving = false;
-  for (const id of D.stagger) moving = step(piece[id], dt, calm) || moving;
-  moving = step(spread, dt, calm) || moving;
+  if (!SCROLL) {
+    for (const id of D.stagger) moving = step(piece[id], dt, calm) || moving;
+    moving = step(spread, dt, calm) || moving;
+  }
   if (calm) { swing.x = swing.target; swing.v = 0; }
   else {
     const w = 3.2;
@@ -191,6 +204,12 @@ new IntersectionObserver((entries) => { visible = entries[entries.length - 1].is
 const fine = matchMedia("(hover: hover) and (pointer: fine)");
 stage.addEventListener("pointermove", (event) => {
   if (!fine.matches) return;
+  if (SCROLL) {
+    const it = event.target.closest && event.target.closest(".it");
+    select(piece[D.stagger[D.stagger.length - 1]].x > 0.95 && it ? it.dataset.g : null);
+    say(status());
+    return;
+  }
   takeOver();
   clearTimeout(leaveTimer);
   setApart(true);
@@ -199,11 +218,18 @@ stage.addEventListener("pointermove", (event) => {
 });
 stage.addEventListener("pointerleave", () => {
   if (!fine.matches) return;
+  if (SCROLL) { select(null); say(status()); return; }
   clearTimeout(leaveTimer);
   leaveTimer = setTimeout(() => { select(null); setApart(false); }, 700);
 });
 stage.addEventListener("click", (event) => {
   if (fine.matches) return;
+  if (SCROLL) {
+    const it = event.target.closest && event.target.closest(".it");
+    if (piece[D.stagger[D.stagger.length - 1]].x > 0.95) select(it && it.dataset.g !== selected ? it.dataset.g : null);
+    say(status());
+    return;
+  }
   takeOver();
   const it = event.target.closest && event.target.closest(".it");
   if (!apart) setApart(true);
@@ -212,6 +238,11 @@ stage.addEventListener("click", (event) => {
 });
 stage.addEventListener("keydown", (event) => {
   const i = selected ? D.list.indexOf(selected) : -1;
+  if (SCROLL) {
+    if (event.key === "r" || event.key === "R" || event.key === "к" || event.key === "К") { event.preventDefault(); setSwing(swing.target > 0 ? -0.7 : swing.target < 0 ? 0 : 0.7); }
+    else if (piece[D.stagger[D.stagger.length - 1]].x > 0.95 && /^Arrow/.test(event.key)) { event.preventDefault(); select(D.list[(i + (/Right|Down/.test(event.key) ? 1 : -1) + D.list.length) % D.list.length]); say(status()); }
+    return;
+  }
   let handled = true;
   if (event.key === "ArrowRight" || event.key === "ArrowDown") { setApart(true); select(D.list[(i + 1) % D.list.length]); }
   else if (event.key === "ArrowLeft" || event.key === "ArrowUp") { setApart(true); select(D.list[(i - 1 + D.list.length) % D.list.length]); }
@@ -222,9 +253,9 @@ stage.addEventListener("keydown", (event) => {
   else handled = false;
   if (handled) { event.preventDefault(); takeOver(); run(); }
 });
-apartButton.addEventListener("click", () => { takeOver(); setApart(!apart); });
-spreadButton.addEventListener("click", () => { takeOver(); setSpread(!spreadOn); });
+if (apartButton) apartButton.addEventListener("click", () => { takeOver(); setApart(!apart); });
+if (spreadButton) spreadButton.addEventListener("click", () => { takeOver(); setSpread(!spreadOn); });
 if (swingButton) swingButton.addEventListener("click", () => { takeOver(); setApart(false); setSwing(swing.target > 0 ? -0.7 : swing.target < 0 ? 0 : 0.7); });
 chips.forEach((chip) => chip.addEventListener("click", () => { takeOver(); setApart(true); select(chip.dataset.part === selected ? null : chip.dataset.part); run(); }));
-if (hint) hint.textContent = fine.matches ? "Наведите, чтобы разобрать" : "Нажмите, чтобы разобрать";
+if (hint && !SCROLL) hint.textContent = fine.matches ? "Наведите, чтобы разобрать" : "Нажмите, чтобы разобрать";
 place();

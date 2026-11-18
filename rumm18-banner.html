@@ -160,7 +160,7 @@ body{margin:0;background:#0b0c0d}
 }
 @media (prefers-reduced-motion:reduce){.kt-btn,.kt-chip{transition:none}}
 </style></head><body class="iso" data-theme="dark">
-<section class="kt-banner" aria-label="RUMM 18 в разборе">
+<section class="kt-banner" data-rumm aria-label="RUMM 18 в разборе">
   <div class="kt-copy">
     <h2 class="kt-title">RUMM 18 изнутри</h2>
     <p class="kt-lead">Наведите на машину, чтобы разобрать её на узлы. Шасси раздвигается, моторы хода закрыты крышками, стрела поворачивается вбок для работы вдоль стены.</p>
@@ -2602,7 +2602,8 @@ function boom(X, theta = 0) {
 return { PIVOT, SWING_BASE, boom };
 })();
 const D = {"V":[0.48527693352604606,0.7472609476841368,0.45399049973954675],"EX":[1.4629644687242376,0.4313183206741087],"EY":[-0.9500602345676725,0.664171970257371],"EZ":[0,-1.5542585326231801],"stagger":["canopy","hood","counterweight","radiator","engine","tanks","station","boom","swing","blade","coverL","coverR","trackL","trackR","platform","ring","center"],"spring":{"stagger":0.045,"stiffness":52,"damping":13.2,"substeps":4},"groups":{"canopy":["canopy"],"hood":["hood"],"engine":["engine"],"radiator":["radiator"],"counterweight":["counterweight"],"tanks":["tanks"],"station":["station"],"platform":["platform"],"ring":["ring"],"boom":["boom"],"swing":["swing"],"blade":["blade"],"tracks":["trackL","trackR"],"covers":["coverL","coverR"],"center":["center"]},"list":["canopy","hood","engine","radiator","counterweight","tanks","station","platform","ring","swing","boom","blade","covers","tracks","center"],"names":{"canopy":"Навес","hood":"Капот","engine":"Двигатель Kubota и насос","radiator":"Радиатор","counterweight":"Противовес","tanks":"Гидробак и топливный бак","station":"Место оператора","platform":"Поворотная платформа","ring":"Опорно-поворотный круг","swing":"Поворот стрелы","boom":"Стрела, рукоять, ковш","blade":"Отвал","covers":"Закрытые гидромоторы","tracks":"Гусеницы","center":"Раздвижная рама"},"P":{"origin":[504.54528225677984,572.7862212706507],"scale":1.37905753280466,"azimuth":57,"elevation":27},"pieces":{"canopy":{"move":[0,0,104]},"hood":{"move":[-6,0,76]},"radiator":{"move":[0,50,22]},"engine":{"move":[-28,0,40]},"counterweight":{"move":[-48,0,0]},"tanks":{"move":[0,-48,10]},"station":{"move":[12,0,44]},"boom":{"move":[54,0,22]},"swing":{"move":[28,0,22]},"blade":{"move":[40,0,0]},"coverL":{"move":[0,-24,0]},"coverR":{"move":[0,24,0]},"trackL":{"move":[0,42,0]},"trackR":{"move":[0,-42,0]},"platform":{"move":[0,0,20]},"ring":{"move":[0,0,9]},"center":{"move":[0,0,0]}},"say":{"canopy":"навес · высота машины 2 325 мм","hood":"капот и задний щиток · открывают моторный отсек","engine":"Kubota D902 · 3 цилиндра · 11,2 кВт · гидронасос на маховике","radiator":"радиатор · водяное охлаждение двигателя","counterweight":"противовес · уравновешивает стрелу с ковшом","tanks":"гидробак и топливный бак","station":"сиденье, джойстики гидроуправления и рычаги хода","platform":"поворотная платформа · гидрораспределитель и узел поворота стрелы","ring":"опорно-поворотный круг · платформа вращается на 360°","boom":"стрела, рукоять и ковш 0,04 м³ · глубина копания 2 060 мм","swing":"кронштейн поворота стрелы · копает вдоль стены и забора","blade":"отвал с гидроцилиндром и уширителями","tracks":"гусеница · гидромотор, звёздочка, катки и натяжное колесо","covers":"закрытые ходовые гидромоторы · крышка защищает мотор и шланги","center":"рама ходовой · телескопические балки и цилиндр раздвигают гусеницы"}};
-const root = document.querySelector(".kt-banner");
+const root = document.querySelector("[data-rumm]");
+const SCROLL = root.hasAttribute("data-scroll");
 const stage = root.querySelector(".kt-stage");
 const machine = stage.querySelector(".kt-machine");
 const readout = root.querySelector("[data-readout]");
@@ -2650,7 +2651,7 @@ const piece = Object.fromEntries(D.stagger.map((id) => [id, springOf()]));
 const spread = springOf();
 
 let clock = 0, apart = false, spreadOn = false, selected = null;
-let touring = !still.matches, tourClock = 0, idleTimer = 0, leaveTimer = 0;
+let touring = !still.matches && !SCROLL, tourClock = 0, idleTimer = 0, leaveTimer = 0;
 let visible = false, frame = 0, last = 0;
 
 const screen = (v, share) => [(D.EX[0] * v[0] + D.EY[0] * v[1] + D.EZ[0] * v[2]) * share, (D.EX[1] * v[0] + D.EY[1] * v[1] + D.EZ[1] * v[2]) * share];
@@ -2678,15 +2679,14 @@ function setApart(on) {
     if (p.target === goal) p.pending = null;
     else p.pending = { value: goal, at: clock + (still.matches ? 0 : index++ * SPRING.stagger) };
   }
-  apartButton.textContent = on ? "Собрать" : "Разобрать";
+  if (apartButton) apartButton.textContent = on ? "Собрать" : "Разобрать";
   if (!on) select(null);
   run();
 }
 function setSpread(on) {
   spreadOn = on;
   spread.target = on ? 1 : 0;
-  spreadButton.setAttribute("aria-pressed", String(on));
-  spreadButton.textContent = on ? "Сдвинуть шасси" : "Раздвинуть шасси";
+  if (spreadButton) { spreadButton.setAttribute("aria-pressed", String(on)); spreadButton.textContent = on ? "Сдвинуть шасси" : "Раздвинуть шасси"; }
   run();
 }
 function setSwing(value) {
@@ -2761,6 +2761,17 @@ function tourTick(dt) {
   while (tourIndex < TOUR.length && tourClock >= TOUR[tourIndex][0]) TOUR[tourIndex++][1]();
 }
 
+// ---- scroll mode: the page sets a progress 0..1 and every share follows it directly ----
+let progress = 0;
+const smooth = (t) => { const x = Math.min(1, Math.max(0, t)); return x * x * (3 - 2 * x); };
+function applyProgress() {
+  spread.x = spread.target = smooth((progress - 0.18) / 0.14);
+  spreadOn = spread.x > 0.5;
+  D.stagger.forEach((id, i) => { const p = piece[id]; p.x = p.target = smooth((progress - 0.36 - i * 0.018) / 0.24); p.v = 0; p.pending = null; });
+  apart = piece[D.stagger[0]].x > 0.5;
+  if (selected && piece[D.stagger[D.stagger.length - 1]].x < 0.9) select(null);
+}
+window.RUMM = { progress(p) { progress = p; if (SCROLL) { applyProgress(); place(); say(status()); } }, swing: (v) => setSwing(v) };
 function tick(now) {
   const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
   last = now;
@@ -2768,8 +2779,10 @@ function tick(now) {
   const calm = still.matches;
   if (touring) tourTick(dt);
   let moving = false;
-  for (const id of D.stagger) moving = step(piece[id], dt, calm) || moving;
-  moving = step(spread, dt, calm) || moving;
+  if (!SCROLL) {
+    for (const id of D.stagger) moving = step(piece[id], dt, calm) || moving;
+    moving = step(spread, dt, calm) || moving;
+  }
   if (calm) { swing.x = swing.target; swing.v = 0; }
   else {
     const w = 3.2;
@@ -2794,6 +2807,12 @@ new IntersectionObserver((entries) => { visible = entries[entries.length - 1].is
 const fine = matchMedia("(hover: hover) and (pointer: fine)");
 stage.addEventListener("pointermove", (event) => {
   if (!fine.matches) return;
+  if (SCROLL) {
+    const it = event.target.closest && event.target.closest(".it");
+    select(piece[D.stagger[D.stagger.length - 1]].x > 0.95 && it ? it.dataset.g : null);
+    say(status());
+    return;
+  }
   takeOver();
   clearTimeout(leaveTimer);
   setApart(true);
@@ -2802,11 +2821,18 @@ stage.addEventListener("pointermove", (event) => {
 });
 stage.addEventListener("pointerleave", () => {
   if (!fine.matches) return;
+  if (SCROLL) { select(null); say(status()); return; }
   clearTimeout(leaveTimer);
   leaveTimer = setTimeout(() => { select(null); setApart(false); }, 700);
 });
 stage.addEventListener("click", (event) => {
   if (fine.matches) return;
+  if (SCROLL) {
+    const it = event.target.closest && event.target.closest(".it");
+    if (piece[D.stagger[D.stagger.length - 1]].x > 0.95) select(it && it.dataset.g !== selected ? it.dataset.g : null);
+    say(status());
+    return;
+  }
   takeOver();
   const it = event.target.closest && event.target.closest(".it");
   if (!apart) setApart(true);
@@ -2815,6 +2841,11 @@ stage.addEventListener("click", (event) => {
 });
 stage.addEventListener("keydown", (event) => {
   const i = selected ? D.list.indexOf(selected) : -1;
+  if (SCROLL) {
+    if (event.key === "r" || event.key === "R" || event.key === "к" || event.key === "К") { event.preventDefault(); setSwing(swing.target > 0 ? -0.7 : swing.target < 0 ? 0 : 0.7); }
+    else if (piece[D.stagger[D.stagger.length - 1]].x > 0.95 && /^Arrow/.test(event.key)) { event.preventDefault(); select(D.list[(i + (/Right|Down/.test(event.key) ? 1 : -1) + D.list.length) % D.list.length]); say(status()); }
+    return;
+  }
   let handled = true;
   if (event.key === "ArrowRight" || event.key === "ArrowDown") { setApart(true); select(D.list[(i + 1) % D.list.length]); }
   else if (event.key === "ArrowLeft" || event.key === "ArrowUp") { setApart(true); select(D.list[(i - 1 + D.list.length) % D.list.length]); }
@@ -2825,10 +2856,10 @@ stage.addEventListener("keydown", (event) => {
   else handled = false;
   if (handled) { event.preventDefault(); takeOver(); run(); }
 });
-apartButton.addEventListener("click", () => { takeOver(); setApart(!apart); });
-spreadButton.addEventListener("click", () => { takeOver(); setSpread(!spreadOn); });
+if (apartButton) apartButton.addEventListener("click", () => { takeOver(); setApart(!apart); });
+if (spreadButton) spreadButton.addEventListener("click", () => { takeOver(); setSpread(!spreadOn); });
 if (swingButton) swingButton.addEventListener("click", () => { takeOver(); setApart(false); setSwing(swing.target > 0 ? -0.7 : swing.target < 0 ? 0 : 0.7); });
 chips.forEach((chip) => chip.addEventListener("click", () => { takeOver(); setApart(true); select(chip.dataset.part === selected ? null : chip.dataset.part); run(); }));
-if (hint) hint.textContent = fine.matches ? "Наведите, чтобы разобрать" : "Нажмите, чтобы разобрать";
+if (hint && !SCROLL) hint.textContent = fine.matches ? "Наведите, чтобы разобрать" : "Нажмите, чтобы разобрать";
 place();
 </script></body></html>

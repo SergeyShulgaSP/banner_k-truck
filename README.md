@@ -34,7 +34,9 @@ live.js             анимация в браузере: пружины раз�
 banner.css          оформление баннера (тёмная тема, оранжевый акцент, Montserrat)
 kit/                нужные файлы движка Anatomy (MIT, см. kit/LICENSE-anatomy)
 rumm18-banner.html  готовая собранная страница (можно открыть сразу)
-index.html          та же страница для GitHub Pages
+hero.html           тёмный первый экран: шапка, заголовок, фото RUMM 18 → при прокрутке чертёж → раздвижка шасси → разбор
+index.html          копия hero.html для GitHub Pages
+hero.css            стили первого экрана и шапки
 ```
 
 ## Запуск
@@ -46,7 +48,7 @@ npm run build        # полная сборка: порядок отрисов�
 npm run build:fast   # быстрая сборка без расчёта порядка, для правок геометрии (детали могут перекрываться неправильно)
 ```
 
-Результат — `rumm18-banner.html`. Откройте его в браузере. Для GitHub Pages скопируйте его в `index.html`: `cp rumm18-banner.html index.html`.
+Результат — `rumm18-banner.html`. Откройте его в браузере. Сборка пишет и `hero.html` (первый экран); для GitHub Pages: `cp hero.html index.html`.
 
 ## Как поставить на сайт
 
