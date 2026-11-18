@@ -1,0 +1,13 @@
+{
+  "name": "k-truck-rumm18-banner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Интерактивный баннер K-TRUCK: мини-экскаватор RUMM 18 в изометрии с разбором на узлы",
+  "engines": { "node": ">=20.10" },
+  "scripts": {
+    "build": "node build.mjs",
+    "build:fast": "node build.mjs --fast",
+    "depth": "node build.mjs --depth"
+  }
+}
